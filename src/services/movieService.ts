@@ -12,7 +12,8 @@ export const fetchMovies = async (): Promise<Movie[]> => {
     title: `Movie ${i + 1}`,
     rating: parseFloat((Math.random() * 5 + 5).toFixed(1)), // Ratings between 5.0 and 10.0
     imageUrl: `https://picsum.photos/seed/${i + 1}/300/450`, // Placeholder images
-    watched: false
+    watched: false,
+    watchedCount: 0
   }));
 
   return new Promise((resolve) => {

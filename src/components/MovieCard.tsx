@@ -9,13 +9,24 @@ interface MovieCardProps {
   movie: Movie;
   onToggleWatched: (id: string) => void;
   highlighted?: boolean;
+  onClick: (movie: Movie) => void;
 }
 
-const MovieCard: React.FC<MovieCardProps> = ({ movie, onToggleWatched, highlighted = false }) => {
+const MovieCard: React.FC<MovieCardProps> = ({ movie, onToggleWatched, highlighted = false, onClick }) => {
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't trigger card click if clicking the watch button
+    if ((e.target as HTMLElement).closest('button')) {
+      return;
+    }
+    onClick(movie);
+  };
+  
   return (
     <div 
-      className={`relative rounded-lg overflow-hidden transition-all duration-300 h-full 
+      id={`movie-${movie.id}`}
+      className={`relative rounded-lg overflow-hidden transition-all duration-300 h-full cursor-pointer
         ${highlighted ? 'ring-4 ring-primary scale-105 shadow-lg shadow-primary/30' : 'hover:scale-102 hover:shadow-md'}`}
+      onClick={handleCardClick}
     >
       <div className="aspect-[2/3] bg-muted relative">
         <img 
@@ -27,6 +38,9 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onToggleWatched, highlight
         {movie.watched && (
           <div className="absolute top-0 right-0 bg-primary text-primary-foreground p-1 rounded-bl-lg">
             <Check className="h-4 w-4" />
+            {movie.watchedCount > 1 && (
+              <span className="text-xs font-bold ml-1">{movie.watchedCount}</span>
+            )}
           </div>
         )}
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
@@ -38,10 +52,13 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onToggleWatched, highlight
             <Button 
               variant={movie.watched ? "outline" : "secondary"} 
               size="sm"
-              onClick={() => onToggleWatched(movie.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleWatched(movie.id);
+              }}
               className="text-xs h-7"
             >
-              {movie.watched ? 'Watched' : 'Mark Watched'}
+              {movie.watched ? `Watched (${movie.watchedCount})` : 'Mark Watched'}
             </Button>
           </div>
         </div>

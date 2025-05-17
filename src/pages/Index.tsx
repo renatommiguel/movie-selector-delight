@@ -4,9 +4,11 @@ import Header from '../components/Header';
 import MovieGrid from '../components/MovieGrid';
 import RandomMovieButton from '../components/RandomMovieButton';
 import MovieFilters from '../components/MovieFilters';
+import MovieDetail from '../components/MovieDetail';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { fetchMovies, saveMovieState, getSavedMovies } from '../services/movieService';
 import { Movie } from '../types';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const Index: React.FC = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -15,6 +17,7 @@ const Index: React.FC = () => {
   const [showWatched, setShowWatched] = useState<boolean>(false);
   const [highlightedMovieId, setHighlightedMovieId] = useState<string | null>(null);
   const [choosing, setChoosing] = useState<boolean>(false);
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const { toast } = useToast();
 
   // Load movies on mount
@@ -26,7 +29,14 @@ const Index: React.FC = () => {
         const savedMovies = getSavedMovies();
         
         if (savedMovies) {
-          setMovies(savedMovies);
+          // Ensure all movies have the new properties
+          const updatedMovies = savedMovies.map(movie => ({
+            ...movie,
+            watchedCount: movie.watchedCount || (movie.watched ? 1 : 0),
+            lastWatchedAt: movie.lastWatchedAt || (movie.watched ? new Date().toISOString() : undefined)
+          }));
+          setMovies(updatedMovies);
+          saveMovieState(updatedMovies);
         } else {
           // If no saved movies, fetch new ones
           const fetchedMovies = await fetchMovies();
@@ -60,9 +70,18 @@ const Index: React.FC = () => {
   // Toggle watched status for a movie
   const handleToggleWatched = (id: string) => {
     setMovies(prevMovies => {
-      const updatedMovies = prevMovies.map(movie => 
-        movie.id === id ? { ...movie, watched: !movie.watched } : movie
-      );
+      const updatedMovies = prevMovies.map(movie => {
+        if (movie.id === id) {
+          const wasWatched = movie.watched;
+          return { 
+            ...movie, 
+            watched: true,
+            watchedCount: movie.watchedCount + 1,
+            lastWatchedAt: new Date().toISOString()
+          };
+        }
+        return movie;
+      });
       
       // Save updated state to localStorage
       saveMovieState(updatedMovies);
@@ -76,16 +95,71 @@ const Index: React.FC = () => {
       description: "Movie watched status has been updated.",
       duration: 2000,
     });
+    
+    // Update selected movie if it's the one being toggled
+    if (selectedMovie && selectedMovie.id === id) {
+      setSelectedMovie(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          watched: true,
+          watchedCount: prev.watchedCount + 1,
+          lastWatchedAt: new Date().toISOString()
+        };
+      });
+    }
+  };
+
+  // Reset watched status for a movie
+  const handleResetWatched = (id: string) => {
+    setMovies(prevMovies => {
+      const updatedMovies = prevMovies.map(movie => 
+        movie.id === id 
+          ? { ...movie, watched: false, watchedCount: 0, lastWatchedAt: undefined }
+          : movie
+      );
+      
+      // Save updated state to localStorage
+      saveMovieState(updatedMovies);
+      
+      return updatedMovies;
+    });
+
+    // Show toast notification
+    toast({
+      title: "Status Reset",
+      description: "Movie watched status has been reset.",
+      duration: 2000,
+    });
+    
+    // Update selected movie if it's the one being reset
+    if (selectedMovie && selectedMovie.id === id) {
+      setSelectedMovie(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          watched: false,
+          watchedCount: 0,
+          lastWatchedAt: undefined
+        };
+      });
+    }
+  };
+
+  // Handle movie selection
+  const handleMovieClick = (movie: Movie) => {
+    setSelectedMovie(movie);
   };
 
   // Choose a random movie
   const handleChooseRandom = () => {
-    if (filteredMovies.length === 0) {
+    // Get unwatched movies
+    const unwatchedMovies = movies.filter(m => !m.watched);
+    
+    if (unwatchedMovies.length === 0) {
       toast({
-        title: "No movies available",
-        description: showWatched 
-          ? "You haven't marked any movies as watched yet."
-          : "There are no movies to choose from.",
+        title: "No unwatched movies",
+        description: "You've watched all the movies! Reset some to continue.",
         variant: "destructive",
       });
       return;
@@ -97,8 +171,8 @@ const Index: React.FC = () => {
     let iterations = 0;
     const maxIterations = 20;
     const interval = setInterval(() => {
-      const randomIndex = Math.floor(Math.random() * filteredMovies.length);
-      setHighlightedMovieId(filteredMovies[randomIndex].id);
+      const randomIndex = Math.floor(Math.random() * unwatchedMovies.length);
+      setHighlightedMovieId(unwatchedMovies[randomIndex].id);
       
       iterations++;
       if (iterations >= maxIterations) {
@@ -106,8 +180,8 @@ const Index: React.FC = () => {
         setChoosing(false);
         
         // Final selection
-        const finalIndex = Math.floor(Math.random() * filteredMovies.length);
-        const selectedMovie = filteredMovies[finalIndex];
+        const finalIndex = Math.floor(Math.random() * unwatchedMovies.length);
+        const selectedMovie = unwatchedMovies[finalIndex];
         setHighlightedMovieId(selectedMovie.id);
         
         // Scroll the selected movie into view
@@ -116,9 +190,12 @@ const Index: React.FC = () => {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
         
+        // Show selected movie detail
+        setSelectedMovie(selectedMovie);
+        
         toast({
           title: "Movie Selected!",
-          description: `How about watching "${selectedMovie.title}" (${selectedMovie.rating}/10)?`,
+          description: `We've picked "${selectedMovie.title}" (${selectedMovie.rating}/10) for you.`,
         });
       }
     }, 100);
@@ -160,6 +237,7 @@ const Index: React.FC = () => {
             movies={filteredMovies} 
             onToggleWatched={handleToggleWatched}
             highlightedMovieId={highlightedMovieId}
+            onMovieClick={handleMovieClick}
           />
         ) : (
           <div className="text-center py-12">
@@ -172,6 +250,19 @@ const Index: React.FC = () => {
           </div>
         )}
       </main>
+      
+      <Dialog open={!!selectedMovie} onOpenChange={(open) => !open && setSelectedMovie(null)}>
+        <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-lg">
+          {selectedMovie && (
+            <MovieDetail 
+              movie={selectedMovie} 
+              onClose={() => setSelectedMovie(null)}
+              onToggleWatched={handleToggleWatched}
+              onResetWatched={handleResetWatched}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
       
       <footer className="py-6 border-t border-border">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">

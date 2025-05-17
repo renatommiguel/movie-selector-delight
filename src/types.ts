@@ -5,4 +5,6 @@ export interface Movie {
   rating: number;
   imageUrl: string;
   watched: boolean;
+  watchedCount: number;
+  lastWatchedAt?: string; // ISO date string
 }
