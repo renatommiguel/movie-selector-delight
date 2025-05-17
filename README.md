@@ -1,73 +1,47 @@
-# Welcome to your Lovable project
 
-## Project info
+# Movie Selector Delight
 
-**URL**: https://lovable.dev/projects/e6910bff-6498-46bd-9be9-741028343ae0
+A web application that lets you browse movies and randomly select one to watch. Mark movies as watched, keep track of your watch history, and discover new films to enjoy.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- Browse a collection of 100 movies
+- Randomly select movies from your unwatched collection
+- Mark movies as watched/unwatched with timestamps
+- Track how many times you've watched each movie
+- View detailed movie information with links to IMDB and Google search
 
-**Use Lovable**
+## Hosting on GitHub Pages
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/e6910bff-6498-46bd-9be9-741028343ae0) and start prompting.
+This project is configured to be hosted on GitHub Pages using GitHub Actions for automated deployment.
 
-Changes made via Lovable will be committed automatically to this repo.
+### Setup Instructions
 
-**Use your preferred IDE**
+1. Create a new repository on GitHub
+2. Push this code to your repository
+3. Go to repository Settings > Pages
+4. Under "Build and deployment", select "GitHub Actions" as the source
+5. The site will be automatically deployed when you push to the main branch
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Manual Deployment
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+To deploy manually:
 
-Follow these steps:
+1. Run `npm run build`
+2. The built files will be in the `dist` directory
+3. These files can be hosted on any static hosting service
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## Development
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Technologies Used
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
 - React
-- shadcn-ui
+- TypeScript
+- Vite
 - Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/e6910bff-6498-46bd-9be9-741028343ae0) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+- shadcn/ui components
